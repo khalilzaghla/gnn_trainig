@@ -1,0 +1,182 @@
+# ============================================
+# GNN Fraud Detection Configuration
+# ============================================
+
+# Data Configuration
+data:
+  input_csv: "transactions_with_features.csv"
+  graph_data: "transaction_graph_data.pt"
+  output_dir: "outputs"
+  
+  # Feature columns to use
+  feature_columns:
+    - "amount_normalized"
+    - "amount_deviation"
+    - "hour_sin"
+    - "hour_cos"
+    - "day_of_week"
+    - "is_weekend"
+    - "time_since_prev_txn_log"
+    - "velocity_last_hour"
+    - "velocity_last_day"
+    - "card_age_days"
+    - "account_balance_ratio"
+    - "is_international"
+    - "is_recurring_merchant"
+    - "merchant_id"
+    - "device_id"
+    - "country_id"
+  
+  # Data split ratios
+  split:
+    train: 0.7
+    val: 0.1
+    test: 0.2
+
+# Model Architectures
+models:
+  sage:
+    type: "SAGEConv"
+    hidden_dims: [32, 64, 128]  # Hidden dimensions to test
+    num_layers: 2
+    dropout: 0.2
+    activation: "relu"
+    out_dim: 1
+  
+  gat:
+    type: "GATConv"
+    hidden_dims: [32, 64, 128]  # Hidden dimensions to test
+    num_layers: 2
+    heads: 4  # Number of attention heads
+    dropout: 0.2
+    activation: "elu"
+    out_dim: 1
+
+# Training Configuration
+training:
+  epochs: 50
+  learning_rate: 0.001  # 1e-3
+  weight_decay: 0.00001  # 1e-5
+  optimizer: "Adam"
+  
+  # Loss function
+  loss:
+    type: "BCEWithLogitsLoss"
+    use_pos_weight: true  # Automatically calculate from fraud ratio
+  
+  # Early stopping (optional)
+  early_stopping:
+    enabled: false
+    patience: 10
+    min_delta: 0.0001
+  
+  # Device
+  device: "cuda"  # auto, cuda, or cpu
+
+# Evaluation Configuration
+evaluation:
+  metrics:
+    - "auc_pr"  # Area Under Precision-Recall Curve
+    - "auc_roc"  # Area Under ROC Curve
+    - "f1"
+    - "precision"
+    - "recall"
+  
+  # Threshold search
+  threshold:
+    search: true
+    range: [0.0, 1.0]
+    num_steps: 101
+    optimize_for: "f1"  # f1, precision, or recall
+
+# Experiment Configuration
+experiment:
+  name: "fraud_detection_gnn"
+  model_types:
+    - "sage"
+    - "gat"
+  
+  # Grid search parameters
+  grid_search:
+    enabled: true
+    parameters:
+      hidden_dim: [32, 64, 128]
+  
+  # Results
+  results_file: "experiments_results.csv"
+  best_model_file: "best_model.pt"
+  
+  # Visualization
+  plots:
+    pr_curve: "pr_best.png"
+    roc_curve: "roc_curve.png"
+    save_dpi: 150
+
+# Inference Configuration
+inference:
+  model_path: "best_model.pt"
+  threshold_mode: "optimal"  # optimal (from training) or fixed
+  fixed_threshold: 0.5
+  
+  # Output
+  predictions_file: "fraud_predictions.csv"
+  
+  # Display options
+  display:
+    num_fraud_examples: 10
+    num_normal_examples: 10
+    num_high_risk: 10
+
+# Graph Construction
+graph:
+  edge_types:
+    sequential:
+      enabled: true
+      group_by: "account_id"
+      sort_by: "timestamp"
+      bidirectional: true
+    
+    device:
+      enabled: true
+      group_by: "device_id"
+      sort_by: "timestamp"
+      bidirectional: true
+    
+    merchant:
+      enabled: true
+      group_by: "merchant_id"
+      sort_by: "timestamp"
+      bidirectional: true
+
+# Feature Engineering (for new transactions)
+feature_engineering:
+  # Time-based features
+  time_features:
+    - "hour"
+    - "day_of_week"
+    - "is_weekend"
+    - "hour_sin"
+    - "hour_cos"
+  
+  # Velocity features (require historical data)
+  velocity_features:
+    - "time_since_prev_txn"
+    - "time_since_prev_txn_log"
+    - "velocity_last_hour"
+    - "velocity_last_day"
+  
+  # Normalization
+  normalization:
+    amount_method: "zscore"  # zscore or minmax
+    
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  verbose: false
+  log_file: "training.log"
+
+# Random Seeds (for reproducibility)
+random_seed:
+  torch: 42
+  numpy: 42
+  python: 42
