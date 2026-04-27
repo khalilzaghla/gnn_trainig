@@ -321,37 +321,4 @@ With threshold = 0.5:
    AUC-PR:     0.7234
 ```
 
-## 🛠️ Development
 
-### Adding New Features
-
-1. Edit `transactions_to_features.py` or feature engineering in `test.py`
-2. Update `feature_columns` in `config.yaml`
-3. Rebuild graph with `python graph_generator.py`
-4. Retrain model
-
-### Changing Model Architecture
-
-1. Modify model classes in `notebook_source.py`
-2. Update `models` section in `config.yaml`
-3. Retrain and save new model
-
-## 🤝 Contributing
-
-Contributions are welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-## 📧 Contact
-
-For questions or issues, please open an issue on GitHub.
-
-## 📜 License
-
-This project is licensed under the MIT License.
-
----
-
-**Note**: This is a research/educational project. For production use, additional validation, monitoring, and compliance measures are required.
